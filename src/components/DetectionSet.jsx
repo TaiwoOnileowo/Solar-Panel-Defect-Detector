@@ -127,13 +127,13 @@ const DetectionSet = () => {
           slidesPerView={1}
           navigation
           pagination={{ clickable: true }}
-          className="mySwiper"
+        
         >
           {selectedSet.images.map((image, index) => (
             <SwiperSlide
               key={index}
               className={`relative flex ${
-                defectClassName === "black_core" ? "h-[500px] w-full" : null
+                defectClassName === "black_core" ? "h-[480px] w-full" : null
               }  flex-col gap-2 items-center`}
             >
               <div className="relative">
