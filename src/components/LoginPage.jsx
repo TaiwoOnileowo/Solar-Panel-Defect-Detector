@@ -1,12 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStateContext } from "../Context/StateContext";
+import logo from "../assets/logo.svg";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
-  const { setUserInfo, userInfo } = useStateContext();
   const [password, setPassword] = useState("");
+  const {
+    setUserInfo,
+    clearDetectionData,
+    fetchDetectionSets,
+    detectionData,
+    userInfo,
+  } = useStateContext();
   const navigate = useNavigate();
+
+  const getInitialsFromEmail = (email) => {
+    const namePart = email.split("@")[0];
+    const parts = namePart.split(".");
+    if (parts.length >= 2) {
+      return parts[0][0].toUpperCase() + parts[1][0].toUpperCase();
+    }
+    return namePart[0].toUpperCase();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,15 +38,36 @@ function LoginPage() {
 
     try {
       const response = await fetch(
-        " https://pv-detection-be-f4e629996651.herokuapp.com/api/v1/auth/login",
+        "https://pv-detection-be-f4e629996651.herokuapp.com/api/v1/auth/login",
         requestOptions
       );
       const result = await response.json();
       if (response.ok && result.status === "success") {
         const { id } = result.data.user;
         const accessToken = result.data.accessToken;
-        setUserInfo({ userId: id, accessToken });
-       localStorage.setItem("userInfo", JSON.stringify({ userId: id, accessToken }));
+        const initials = getInitialsFromEmail(email);
+
+        clearDetectionData();
+
+        setUserInfo({
+          userId: id,
+          accessToken,
+          email: email,
+          initials,
+        });
+
+        localStorage.setItem(
+          "userInfo",
+          JSON.stringify({
+            userId: id,
+            accessToken,
+
+            initials,
+          })
+        );
+
+        console.log("jjd");
+        await fetchDetectionSets(accessToken, id);
         navigate("/app", {
           state: {
             user: result.data.user,
@@ -49,10 +86,24 @@ function LoginPage() {
     }
   };
 
+  useEffect(() => {
+    if (detectionData?.detectionSets) {
+      navigate("/app");
+      console.log("hh");
+    }
+  }, [detectionData, navigate]);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-[#F7F7F7]">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+        <img
+          src={logo}
+          alt="Solar Guard Logo"
+          className="w-20 h-20 object-contain mx-auto"
+        />
+        <h2 className="text-2xl font-bold mb-6 text-center text-blue-700">
+          Login
+        </h2>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="block text-sm font-medium text-gray-700">

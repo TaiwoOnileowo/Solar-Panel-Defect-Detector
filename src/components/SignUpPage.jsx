@@ -1,11 +1,15 @@
-// src/SignupPage.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useStateContext } from "../Context/StateContext";
+import logo from "../assets/logo.svg";
 
 function SignupPage() {
   const [email, setEmail] = useState("");
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const { setUserInfo} =
+    useStateContext();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -37,8 +41,23 @@ function SignupPage() {
             accessToken: result.data.accessToken,
           },
         });
+        setUserInfo({
+          userId: result.data.user.id,
+          accessToken: result.data.accessToken,
+          
+        });
+        localStorage.setItem(
+          "userInfo",
+          JSON.stringify({
+            userId: result.data.user.id,
+            accessToken: result.data.accessToken,
+           
+          })
+        );
       } else {
-        alert(`Signup failed: ${result.message || "An unknown error occurred"}`);
+        alert(
+          `Signup failed: ${result.message || "An unknown error occurred"}`
+        );
       }
     } catch (error) {
       console.error("Error:", error);
@@ -47,9 +66,14 @@ function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-[#f7f7f7]">
+      <div className="bg-white p-6 pt-2 my-2 h-full rounded-lg shadow-lg w-full max-w-lg">
+        <img
+          src={logo}
+          alt="Solar Guard Logo"
+          className="w-20 h-14 object-contain mx-auto"
+        />
+        <h2 className="text-2xl font-bold mb-3 text-center text-blue-700">
           Create an Account
         </h2>
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -63,6 +87,7 @@ function SignupPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="email"
             />
           </div>
           <div>
@@ -97,10 +122,10 @@ function SignupPage() {
               Sign Up
             </button>
           </div>
-          <div className="text-sm text-center pt-4">
+          <div className="text-sm text-center">
             <p>
               Already have an account?{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-500">
+              <a href="/login" className="text-blue-600 hover:text-blue-500">
                 Sign In
               </a>
             </p>

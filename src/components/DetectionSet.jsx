@@ -13,35 +13,33 @@ const DetectionSet = () => {
     selectedDetectionSetId,
     detectionData: { detectionSetImages },
   } = useStateContext();
+
   const [imageDimensions, setImageDimensions] = useState({});
-  const mappedDetectionSetImages = detectionSetImages.map(
+
+  const mappedDetectionSetImages = detectionSetImages?.map(
     (setImage) => setImage
   );
-  const setDetected = detectionData.detectionSets.find(
+
+  const selectedSet = mappedDetectionSetImages?.find(
+    (set) => set.detectionId === selectedDetectionSetId
+  );
+
+  const setDetected = detectionData.detectionSets?.find(
     (set) => set.id === selectedDetectionSetId
   );
+
   let displayedDefectSummary;
+  let defectClassName;
 
-  if (setDetected && setDetected?.report?.defectSummary) {
-    const defectSummary = setDetected?.report?.defectSummary;
-
-    for (const [defect, count] of Object.entries(defectSummary)) {
-      // console.log(`${defect}: ${count}`);
-      displayedDefectSummary = (
-        <li className="text-sm">{`${defect}: ${count}`}</li>
-      );
-    }
-  } else {
-    console.log("No defect summary found for the given detection set.");
-  }
+  console.log(setDetected);
 
   useEffect(() => {
-    const selectedSet = mappedDetectionSetImages.find(
+    const selectedSet = mappedDetectionSetImages?.find(
       (set) => set.detectionId === selectedDetectionSetId
     );
     if (selectedSet) {
       setImageDimensions({});
-      selectedSet.images.forEach((image) => {
+      selectedSet?.images.forEach((image) => {
         const img = new Image();
         img.src = image.imageUrl;
         img.onload = () => {
@@ -53,7 +51,19 @@ const DetectionSet = () => {
       });
     }
   }, [detectionSetImages, detectionData.detectionSets]);
-  let defectClassName;
+
+  if (setDetected && setDetected?.report?.defectSummary) {
+    const defectSummary = setDetected?.report?.defectSummary;
+
+    for (const [defect, count] of Object.entries(defectSummary)) {
+      displayedDefectSummary = (
+        <li className="text-sm">{`${defect}: ${count}`}</li>
+      );
+    }
+  } else {
+    console.log("No defect summary found for the given detection set.");
+  }
+
   const getColor = (defectClass) => {
     defectClassName = defectClass;
     switch (defectClass) {
@@ -70,25 +80,14 @@ const DetectionSet = () => {
     }
   };
 
-  if (!detectionSetImages || !detectionSetImages.length) {
-    return <div>No detection set selected</div>;
-  }
-
-  const selectedSet = mappedDetectionSetImages.find(
-    (set) => set.detectionId === selectedDetectionSetId
-  );
-
   if (!selectedSet) {
-    return <div>Selected detection set not found</div>;
+    return <div className=" h-full w-full"></div>;
   }
-  if (selectedSet.images === null) {
-    return <div className="w-full h-screen text-2xl font-bold ">Please Wait...</div>;
-  }
-  console.log(selectedSet.images)
+
   return (
     <div className="mt-0 pb-12">
       <h1 className="text-center text-sm font-bold text-gray-600 mb-6">
-        Images Uploaded: {selectedSet.images.length}
+        Images Uploaded: {selectedSet?.images?.length}
       </h1>
       <Swiper
         modules={[Navigation, Pagination, Scrollbar, A11y]}
@@ -98,26 +97,25 @@ const DetectionSet = () => {
         pagination={{ clickable: true }}
         className="flex items-center"
       >
-        {selectedSet.images.map((image, index) => (
-          <SwiperSlide
-            key={index}
-            className="relative flex flex-col gap-2 items-center"
-          >
-            <img
-              src={image.imageUrl}
-              alt={image.originalFilename}
-              className="w-full h-[200px] object-cover rounded-lg"
-            />
-            <span className="text-sm">{image.originalFilename}</span>
-            <div className="absolute top-0 left-0 w-full h-full  flex items-center justify-center rounded-lg">
-              <div className="flex items-center gap-2 text-lg font-bold text-blue-800">
-                Done <FaCheckCircle />
+        {selectedSet?.images?.map((image, index) => (
+          <SwiperSlide key={index} className="h-[300px]">
+            <div className="relative flex flex-col  gap-2 items-center">
+              <img
+                src={image.imageUrl}
+                alt={image.originalFilename}
+                className="w-full h-[200px] object-cover rounded-lg"
+              />
+              <span className="text-sm">{image.originalFilename}</span>
+              <div className="absolute top-0 left-0 w-full h-full  flex items-center justify-center rounded-lg">
+                <div className="flex items-center gap-2 text-lg font-bold text-blue-800">
+                  Done <FaCheckCircle />
+                </div>
               </div>
             </div>
           </SwiperSlide>
         ))}
       </Swiper>
-      <h1 className="text-center text-sm font-bold text-gray-600 mt-12">
+      <h1 className="text-center text-sm font-bold text-gray-600 mt-2">
         Image Predictions: {setDetected.totalPredictedImages}
       </h1>
       <div className="flex gap-y-4 gap-x-4 py-10 flex-wrap justify-center">
@@ -127,13 +125,14 @@ const DetectionSet = () => {
           slidesPerView={1}
           navigation
           pagination={{ clickable: true }}
-        
         >
-          {selectedSet.images.map((image, index) => (
+          {selectedSet?.images?.map((image, index) => (
             <SwiperSlide
               key={index}
               className={`relative flex ${
-                defectClassName === "black_core" ? "h-[480px] w-full" : null
+                defectClassName === "black_core"
+                  ? "h-[480px] w-full"
+                  : "h-[380px]"
               }  flex-col gap-2 items-center`}
             >
               <div className="relative">
@@ -146,7 +145,7 @@ const DetectionSet = () => {
                   image.defectPredictions.map((defect, defectIndex) => (
                     <React.Fragment key={defectIndex}>
                       <div
-                        className="absolute  text-white px-1"
+                        className="absolute text-white px-1"
                         style={{
                           top: `${
                             (defect.y / imageDimensions[image.id].height) * 100
@@ -188,14 +187,28 @@ const DetectionSet = () => {
         </Swiper>
       </div>
       <div className="flex flex-col w-full px-8">
-        <h1 className="text-center text-sm font-bold text-gray-600">
-          Defects Summary
-        </h1>
-        <p className="text-lg font-bold">
-          Total Defects: {setDetected?.report?.totalDefects}{" "}
-        </p>
-        <p className="">Defects Class: </p>
-        <ul className="list-disc list-inside pt-2">{displayedDefectSummary}</ul>
+        <div className="flex items-center justify-center">
+          {!selectedSet?.report ? (
+            <>
+              <h1 className="text-lg font-bold text-gray-600">
+                Detection Report not available for this Detection Set
+              </h1>
+            </>
+          ) : (
+            <>
+              <h1 className="text-center text-sm font-bold text-gray-600">
+                Defects Summary
+              </h1>
+              <p className="text-lg font-bold">
+                Total Defects: {setDetected?.report?.totalDefects}{" "}
+              </p>
+              <p className="">Defects Class: </p>
+              <ul className="list-disc list-inside pt-2">
+                {displayedDefectSummary}
+              </ul>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

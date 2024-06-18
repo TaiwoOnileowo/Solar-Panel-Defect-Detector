@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useStateContext } from "../Context/StateContext";
 
 const UploadImage = () => {
@@ -12,6 +12,17 @@ const UploadImage = () => {
     setSelectedDetectionSetId,
     setDisplayedWaitMessage,
   } = useStateContext();
+
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const containerRef = useRef(null);
+  let imageStatus;
+  useEffect(() => {
+    if (containerRef.current) {
+      setIsOverflowing(
+        containerRef.current.scrollHeight > containerRef.current.clientHeight
+      );
+    }
+  }, [uploadedImages]);
 
   const handleUpload = (event) => {
     const files = Array.from(event.target.files);
@@ -55,7 +66,16 @@ const UploadImage = () => {
       throw new Error(result.message || "An unknown error occurred");
     }
     setDisplayedWaitMessage("Detection set created");
-    return result.data.detectionSet;
+    if (result.status === "success" && result.data.detectionSet.status === "done") {
+      return result.data.detectionSet;
+    }
+    if (
+      result.status === "success" &&
+      result.data.detectionSet.status === "pending"
+    ) {
+      fetchDetectionResults(result.data.detectionSet.id);
+      imageStatus =  "pending";
+    }
   };
 
   const startDetection = async () => {
@@ -82,18 +102,19 @@ const UploadImage = () => {
         })
       );
 
-      const intervalId = setInterval(() => {
-        fetchDetectionResults(newDetectionSet.id, intervalId);
-      }, 2000);
+      // const intervalId = setInterval(() => {
+      fetchDetectionResults(newDetectionSet.id);
+      // }, 2000);
     } catch (error) {
       console.error("Error:", error);
       alert("An error occurred. Please try again.");
     }
   };
 
-  const fetchDetectionResults = async (setId, intervalId) => {
+  const fetchDetectionResults = async (setId) => {
     if (!setId) return;
     setDisplayedWaitMessage("Fetching detection results...");
+    setSelectedDetectionSetId(setId);
     const myHeaders = new Headers();
     myHeaders.append("Authorization", `Bearer ${userInfo.accessToken}`);
 
@@ -107,43 +128,43 @@ const UploadImage = () => {
       );
       const result = await response.json();
       if (result.status !== "success") {
+        fetchDetectionResults(setId);
         throw new Error(
           "Failed to fetch detection set images: " + result.message
         );
       }
+      if (result.status === "success" && result.data.images.length === 0) {
+        const newImages = result.data.images;
+        console.log(newImages);
 
-      const newImages = result.data.images;
-      console.log(newImages);
-      setSelectedDetectionSetId(setId);
+        // Create a new detection set entry with images and detectionId
+        const newDetectionSetEntry = { images: newImages, detectionId: setId };
 
-      // Create a new detection set entry with images and detectionId
-      const newDetectionSetEntry = { images: newImages, detectionId: setId };
+        // Update detectionData state
+        setDetectionData((prevData) => {
+          const newDetectionSetImages =
+            prevData.detectionSetImages &&
+            prevData.detectionSetImages.length > 0
+              ? [...prevData.detectionSetImages, newDetectionSetEntry]
+              : [newDetectionSetEntry];
 
-      // Update detectionData state
-      setDetectionData((prevData) => {
-        const newDetectionSetImages =
-          prevData.detectionSetImages && prevData.detectionSetImages.length > 0
-            ? [...prevData.detectionSetImages, newDetectionSetEntry]
-            : [newDetectionSetEntry];
+          // Update localStorage inside setDetectionData to use the updated detectionData
+          localStorage.setItem(
+            "detectionData",
+            JSON.stringify({
+              ...prevData,
+              detectionSetImages: newDetectionSetImages,
+            })
+          );
 
-        // Update localStorage inside setDetectionData to use the updated detectionData
-        localStorage.setItem(
-          "detectionData",
-          JSON.stringify({
+          return {
             ...prevData,
             detectionSetImages: newDetectionSetImages,
-          })
-        );
+          };
+        });
 
-        return {
-          ...prevData,
-          detectionSetImages: newDetectionSetImages,
-        };
-      });
-
-      if (newImages.length > 0) {
-        clearInterval(intervalId);
-        setDisplayedWaitMessage("Almost done...");
+        // clearInterval(intervalId);
+        setDisplayedWaitMessage("Done");
         setDetectionData((prevData) => {
           return {
             ...prevData,
@@ -161,7 +182,7 @@ const UploadImage = () => {
             gettingDetection: false,
             pleasewait: false,
           });
-          setDisplayedWaitMessage("Done!");
+
           setUploadedImages([]);
         }, 3000);
       }
@@ -207,7 +228,12 @@ const UploadImage = () => {
         </div>
         {uploadedImages.length > 0 && (
           <>
-            <div className="h-[250px] scrollbar mt-4 flex flex-col">
+            <div
+              ref={containerRef}
+              className={`h-[300px] ${
+                isOverflowing ? "" : "hide-scrollbar"
+              } mt-4 flex flex-col overflow-y-scroll`}
+            >
               {uploadedImages.map((file, index) => (
                 <div
                   key={index}

@@ -6,7 +6,7 @@ const PleaseWait = () => {
   const {displayedWaitMessage} = useStateContext()
   return (
     <>
-    <div className='absolute w-full flex items-center z-[1] justify-center h-full bg-blue-400 bg-opacity-70'>
+    <div className='absolute w-full flex items-center z-[1] justify-center h-full bg-blue-600 bg-opacity-40'>
     <img src={bg_image} alt="" />
   </div>
     <div

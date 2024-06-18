@@ -6,7 +6,7 @@ const Sidebar = () => {
   const { setShow } = useStateContext();
   return (
     <div className="bg-blue-100 text-white  p-6 flex flex-col items-center">
-      <div className="w-full pb-4 h-[10vh] ">
+      <div className="w-full pb-4 h-[8vh] ">
         <button
           className="bg-blue-700 hover:bg-blue-900  transition-all p-2 cursor-pointer rounded-full text-white text-center w-full "
           onClick={() => {
@@ -24,8 +24,8 @@ const Sidebar = () => {
       </div>
       <DetectionSetNames />
       <div className="h-[15vh] flex gap-2 items-center  w-full pb-4">
-        <img src={logo} alt="" className="w-14 h-14 justify-start" />
-        <h1 className="text-xl font-bold uppercase text-[#4493D6]">
+        <img src={logo} alt="" className="w-12 h-12 justify-start" />
+        <h1 className="text-lg font-bold uppercase text-[#4493D6]">
           Solar <span className="text-[#F5E212]">Guard</span>
         </h1>
       </div>

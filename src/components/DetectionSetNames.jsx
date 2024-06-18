@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useStateContext } from "../Context/StateContext";
 
 const DetectionSetNames = () => {
@@ -7,10 +7,23 @@ const DetectionSetNames = () => {
     setShow,
     setSelectedDetectionSetId,
     selectedDetectionSetId,
+    fetchDetectionImages,
   } = useStateContext();
+
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      setIsOverflowing(
+        containerRef.current.scrollHeight > containerRef.current.clientHeight
+      );
+    }
+  }, [detectionSets]);
 
   const handleClick = (id) => {
     setSelectedDetectionSetId(id);
+    fetchDetectionImages(id);
     setShow({
       welcome: false,
       detectionSet: true,
@@ -18,9 +31,14 @@ const DetectionSetNames = () => {
       gettingDetection: false,
     });
   };
-
+  
   return (
-    <div className="px-4 overflow-y-scroll text-black w-full h-[75vh] pt-4">
+    <div
+      ref={containerRef}
+      className={`px-4 ${
+        isOverflowing ? "" : "hide-scrollbar"
+      } text-black w-full h-[75vh] mt-4 overflow-y-scroll`}
+    >
       <ul className="flex flex-col gap-2">
         {detectionSets?.map((set) => (
           <li
