@@ -37,7 +37,7 @@ const DetectionSet = () => {
         };
       });
     }
-  }, [detectionData]);
+  }, [detectionData, selectedSet]);
 
   if (selectedSet?.report) {
     const defectSummary = selectedSet.report.defectSummary;
