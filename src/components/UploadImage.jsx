@@ -5,12 +5,14 @@ const UploadImage = () => {
   const {
     setDetectionData,
     detectionData,
+    setDetectionSet,
     userInfo,
     setShow,
     uploadedImages,
     setUploadedImages,
     setSelectedDetectionSetId,
     setDisplayedWaitMessage,
+    setDetectionStatus,
   } = useStateContext();
 
   const [isOverflowing, setIsOverflowing] = useState(false);
@@ -26,17 +28,15 @@ const UploadImage = () => {
 
   const handleUpload = (event) => {
     const files = Array.from(event.target.files);
-    setDetectionData((prevData) => {
-      return {
-        ...prevData,
-        detectionStatuses: {
-          ...prevData.detectionStatuses,
-          ...files.reduce(
-            (acc, file) => ({ ...acc, [file.name]: "detecting" }),
-            {}
-          ),
-        },
-      };
+    setDetectionStatus((prevStatus) => {
+      const newStatus = files.reduce(
+        (acc, file) => ({
+          ...acc,
+          [file.name]: "detecting",
+        }),
+        prevStatus
+      );
+      return newStatus;
     });
     setUploadedImages((prevData) => {
       return [...prevData, ...files];
@@ -65,50 +65,8 @@ const UploadImage = () => {
     if (!response.ok || result.status !== "success") {
       throw new Error(result.message || "An unknown error occurred");
     }
-    setDisplayedWaitMessage("Detection set created");
-    if (result.status === "success" && result.data.detectionSet.status === "done") {
-      return result.data.detectionSet;
-    }
-    if (
-      result.status === "success" &&
-      result.data.detectionSet.status === "pending"
-    ) {
-      fetchDetectionResults(result.data.detectionSet.id);
-      imageStatus =  "pending";
-    }
-  };
-
-  const startDetection = async () => {
-    setDisplayedWaitMessage("Starting detection...");
-    try {
-      const newDetectionSet = await createDetectionSet();
-      const updatedDetectionSets = [
-        newDetectionSet,
-        ...detectionData.detectionSets,
-      ];
-
-      setDetectionData((prevData) => {
-        return {
-          ...prevData,
-          detectionSets: updatedDetectionSets,
-        };
-      });
-
-      localStorage.setItem(
-        "detectionData",
-        JSON.stringify({
-          ...detectionData,
-          detectionSets: updatedDetectionSets,
-        })
-      );
-
-      // const intervalId = setInterval(() => {
-      fetchDetectionResults(newDetectionSet.id);
-      // }, 2000);
-    } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred. Please try again.");
-    }
+    setDisplayedWaitMessage("Detection Set Created");
+    fetchDetectionResults(result.data.detectionSet.id);
   };
 
   const fetchDetectionResults = async (setId) => {
@@ -120,7 +78,7 @@ const UploadImage = () => {
 
     try {
       const response = await fetch(
-        `https://pv-detection-be-f4e629996651.herokuapp.com/api/v1/detection-sets/${setId}/images`,
+        `https://pv-detection-be-f4e629996651.herokuapp.com/api/v1/detection-sets/${setId}`,
         {
           method: "GET",
           headers: myHeaders,
@@ -133,58 +91,42 @@ const UploadImage = () => {
           "Failed to fetch detection set images: " + result.message
         );
       }
-      if (result.status === "success" && result.data.images.length === 0) {
-        const newImages = result.data.images;
-        console.log(newImages);
 
-        // Create a new detection set entry with images and detectionId
-        const newDetectionSetEntry = { images: newImages, detectionId: setId };
-
-        // Update detectionData state
-        setDetectionData((prevData) => {
-          const newDetectionSetImages =
-            prevData.detectionSetImages &&
-            prevData.detectionSetImages.length > 0
-              ? [...prevData.detectionSetImages, newDetectionSetEntry]
-              : [newDetectionSetEntry];
-
-          // Update localStorage inside setDetectionData to use the updated detectionData
-          localStorage.setItem(
-            "detectionData",
-            JSON.stringify({
-              ...prevData,
-              detectionSetImages: newDetectionSetImages,
-            })
-          );
-
-          return {
-            ...prevData,
-            detectionSetImages: newDetectionSetImages,
-          };
-        });
-
-        // clearInterval(intervalId);
+      if (result.data.detectionSet.status === "pending") {
+        fetchDetectionResults(setId);
+        console.log(result.data.detectionSet);
+        console.log("repolling");
+      } else {
         setDisplayedWaitMessage("Done");
+        const newDataset = result.data.detectionSet;
+        // setDetectionSet((prevData) => {
+        //   const newEntry = prevData ? [...prevData, newDataset] : [newDataset];
+        //   localStorage.setItem("Detection Sets", JSON.stringify(newEntry));
+        //   return newEntry;
+        // });
         setDetectionData((prevData) => {
-          return {
-            ...prevData,
-            detectionStatuses: uploadedImages.reduce(
-              (acc, file) => ({ ...acc, [file.name]: "detected" }),
-              prevData.detectionStatuses
-            ),
-          };
+          const newEntry = prevData ? [newDataset,...prevData ] : [newDataset];
+          localStorage.setItem("Detection Data", JSON.stringify(newEntry));
+          return newEntry;
+        })
+        setDetectionStatus((prevStatus)=>{
+          const newStatus = uploadedImages.reduce(
+            (acc, file) => ({
+              ...acc,
+              [file.name]: "done",
+            }),
+            prevStatus
+          );
+          return newStatus;
+        })
+        setUploadedImages([]);
+        setShow({
+          welcome: false,
+          detectionSet: true,
+          uploadImage: false,
+          gettingDetection: false,
+          pleasewait: false,
         });
-        setTimeout(() => {
-          setShow({
-            welcome: false,
-            detectionSet: true,
-            uploadImage: false,
-            gettingDetection: false,
-            pleasewait: false,
-          });
-
-          setUploadedImages([]);
-        }, 3000);
       }
     } catch (error) {
       console.error("Error fetching detection set images:", error);
@@ -200,7 +142,7 @@ const UploadImage = () => {
       gettingDetection: true,
       pleasewait: true,
     });
-    startDetection();
+    createDetectionSet();
   };
 
   return (

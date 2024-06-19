@@ -8,34 +8,21 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 const DetectionSet = () => {
-  const {
-    detectionData,
-    selectedDetectionSetId,
-    detectionData: { detectionSetImages },
-  } = useStateContext();
-
+  const { detectionData, selectedDetectionSetId } = useStateContext();
+  console.log(selectedDetectionSetId);
+  console.log(detectionData);
   const [imageDimensions, setImageDimensions] = useState({});
 
-  const mappedDetectionSetImages = detectionSetImages?.map(
-    (setImage) => setImage
-  );
-
-  const selectedSet = mappedDetectionSetImages?.find(
-    (set) => set.detectionId === selectedDetectionSetId
-  );
-
-  const setDetected = detectionData.detectionSets?.find(
+  const selectedSet = detectionData?.find(
     (set) => set.id === selectedDetectionSetId
   );
 
-  let displayedDefectSummary;
+  let displayedDefectSummary = [];
   let defectClassName;
 
-  console.log(setDetected);
-
   useEffect(() => {
-    const selectedSet = mappedDetectionSetImages?.find(
-      (set) => set.detectionId === selectedDetectionSetId
+    const selectedSet = detectionData?.find(
+      (set) => set.id === selectedDetectionSetId
     );
     if (selectedSet) {
       setImageDimensions({});
@@ -50,15 +37,15 @@ const DetectionSet = () => {
         };
       });
     }
-  }, [detectionSetImages, detectionData.detectionSets]);
+  }, [detectionData]);
 
-  if (setDetected && setDetected?.report?.defectSummary) {
-    const defectSummary = setDetected?.report?.defectSummary;
-
+  if (selectedSet?.report) {
+    const defectSummary = selectedSet.report.defectSummary;
     for (const [defect, count] of Object.entries(defectSummary)) {
-      displayedDefectSummary = (
-        <li className="text-sm">{`${defect}: ${count}`}</li>
+      displayedDefectSummary.push(
+        <li className="text-sm" key={defect}>{`${defect}: ${count}`}</li>
       );
+      console.log(displayedDefectSummary);
     }
   } else {
     console.log("No defect summary found for the given detection set.");
@@ -81,8 +68,11 @@ const DetectionSet = () => {
   };
 
   if (!selectedSet) {
-    return <div className=" h-full w-full"></div>;
+    console.log(selectedDetectionSetId);
+    console.log(detectionData);
+    return <div className=" h-full w-full">Detection set not found</div>;
   }
+  console.log(selectedSet);
 
   return (
     <div className="mt-0 pb-12">
@@ -116,7 +106,7 @@ const DetectionSet = () => {
         ))}
       </Swiper>
       <h1 className="text-center text-sm font-bold text-gray-600 mt-2">
-        Image Predictions: {setDetected.totalPredictedImages}
+        Image Predictions: {selectedSet.totalPredictedImages}
       </h1>
       <div className="flex gap-y-4 gap-x-4 py-10 flex-wrap justify-center">
         <Swiper
@@ -148,10 +138,14 @@ const DetectionSet = () => {
                         className="absolute text-white px-1"
                         style={{
                           top: `${
-                            (defect.y / imageDimensions[image.id].height) * 100
+                            ((defect.y - defect.h / 2) /
+                              imageDimensions[image.id].height) *
+                            100
                           }%`,
                           left: `${
-                            (defect.x / imageDimensions[image.id].width) * 100
+                            ((defect.x - defect.w / 2) /
+                              imageDimensions[image.id].width) *
+                            100
                           }%`,
                           transform: "translateY(-100%)",
                           background: getColor(defect.class),
@@ -163,10 +157,14 @@ const DetectionSet = () => {
                         className="absolute border-2"
                         style={{
                           top: `${
-                            (defect.y / imageDimensions[image.id].height) * 100
+                            ((defect.y - defect.h / 2) /
+                              imageDimensions[image.id].height) *
+                            100
                           }%`,
                           left: `${
-                            (defect.x / imageDimensions[image.id].width) * 100
+                            ((defect.x - defect.w / 2) /
+                              imageDimensions[image.id].width) *
+                            100
                           }%`,
                           width: `${
                             (defect.w / imageDimensions[image.id].width) * 100
@@ -187,7 +185,7 @@ const DetectionSet = () => {
         </Swiper>
       </div>
       <div className="flex flex-col w-full px-8">
-        <div className="flex items-center justify-center">
+        <div className="flex flex-col gap-2 justify-center">
           {!selectedSet?.report ? (
             <>
               <h1 className="text-lg font-bold text-gray-600">
@@ -199,8 +197,8 @@ const DetectionSet = () => {
               <h1 className="text-center text-sm font-bold text-gray-600">
                 Defects Summary
               </h1>
-              <p className="text-lg font-bold">
-                Total Defects: {setDetected?.report?.totalDefects}{" "}
+              <p className="text-lg mt-10 font-bold">
+                Total Defects: {selectedSet?.report?.totalDefects}{" "}
               </p>
               <p className="">Defects Class: </p>
               <ul className="list-disc list-inside pt-2">

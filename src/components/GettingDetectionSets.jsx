@@ -4,7 +4,7 @@ import { FaCheckCircle } from "react-icons/fa";
 import Swal from 'sweetalert2'
 
 const GettingDetectionSets = () => {
-  const { detectionData: {detectionStatuses}, uploadedImages  } = useStateContext();
+  const { detectionStatus, uploadedImages  } = useStateContext();
 
   return (
     <div className="flex gap-x-4 gap-y-8 mt-8 w-full relative flex-wrap items-center justify-center">
@@ -17,7 +17,7 @@ const GettingDetectionSets = () => {
           />
           <span className="text-sm">{file.name}</span>
           <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center rounded-lg">
-            {detectionStatuses[file.name] === "detecting" ? (
+            {detectionStatus[file.name] === "detecting" ? (
               <div className="overlay">
                 <div className="text-lg font-bold text-gray-700">
                   Detecting<span className="dots" />

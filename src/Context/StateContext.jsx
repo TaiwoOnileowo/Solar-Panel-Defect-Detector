@@ -1,5 +1,4 @@
 import React, { useState, createContext, useContext, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 const Context = createContext();
 
@@ -8,8 +7,11 @@ export const StateContext = ({ children }) => {
     () => JSON.parse(localStorage.getItem("userInfo")) || []
   );
   const [detectionData, setDetectionData] = useState(
-    () => JSON.parse(localStorage.getItem("detectionData")) || {}
+    () => JSON.parse(localStorage.getItem("Detection Data")) || []
   );
+  // const [detectionSet, setDetectionSet] = useState(
+  //   () => JSON.parse(localStorage.getItem("Detection Sets")) || []
+  // );
   const [show, setShow] = useState({
     welcome: true,
     detectionSet: false,
@@ -20,15 +22,17 @@ export const StateContext = ({ children }) => {
   const [uploadedImages, setUploadedImages] = useState([]);
   const [selectedDetectionSetId, setSelectedDetectionSetId] = useState(null);
   const [displayedWaitMessage, setDisplayedWaitMessage] = useState("");
+  const [detectionStatus, setDetectionStatus] = useState({});
 
   const clearDetectionData = () => {
-    setDetectionData({});
-    localStorage.removeItem("detectionData");
+    setDetectionData([]);
+    localStorage.removeItem("Detection Data");
     console.log("removed");
   };
   useEffect(() => {
     if (!userInfo.accessToken) return;
   }, []);
+
   const fetchDetectionSets = async (accessToken, userId) => {
     if (!accessToken) return;
 
@@ -52,16 +56,10 @@ export const StateContext = ({ children }) => {
         const userDetectionSets = result.data.detectionSets.filter(
           (set) => set.userId === userId
         );
-        setDetectionData((prevData) => ({
-          detectionSets: userDetectionSets,
-          ...prevData,
-        }));
+        setDetectionData(userDetectionSets);
         localStorage.setItem(
-          "detectionData",
-          JSON.stringify({
-            detectionSets: userDetectionSets,
-            ...detectionData,
-          })
+          "Detection Data",
+          JSON.stringify(userDetectionSets)
         );
       } else {
         console.error("Failed to fetch detection sets:", result.message);
@@ -77,55 +75,55 @@ export const StateContext = ({ children }) => {
     }
   }, [userInfo]);
 
-  const fetchDetectionImages = async (setId) => {
-    if (!setId) return;
+  // const fetchDetectionImages = async (setId) => {
+  //   if (!setId) return;
 
-    const myHeaders = new Headers();
-    myHeaders.append("Authorization", `Bearer ${userInfo.accessToken}`);
+  //   const myHeaders = new Headers();
+  //   myHeaders.append("Authorization", `Bearer ${userInfo.accessToken}`);
 
-    try {
-      const response = await fetch(
-        `https://pv-detection-be-f4e629996651.herokuapp.com/api/v1/detection-sets/${setId}/images`,
-        {
-          method: "GET",
-          headers: myHeaders,
-        }
-      );
-      const result = await response.json();
-      if (result.status !== "success") {
-        throw new Error(
-          "Failed to fetch detection set images: " + result.message
-        );
-      }
+  //   try {
+  //     const response = await fetch(
+  //       `https://pv-detection-be-f4e629996651.herokuapp.com/api/v1/detection-sets/${setId}/images`,
+  //       {
+  //         method: "GET",
+  //         headers: myHeaders,
+  //       }
+  //     );
+  //     const result = await response.json();
+  //     if (result.status !== "success") {
+  //       throw new Error(
+  //         "Failed to fetch detection set images: " + result.message
+  //       );
+  //     }
 
-      const newImages = result.data.images;
-      console.log(newImages);
+  //     const newImages = result.data.images;
+  //     console.log(newImages);
 
-      const newDetectionSetEntry = { images: newImages, detectionId: setId };
+  //     const newDetectionSetEntry = { images: newImages, detectionId: setId };
 
-      setDetectionData((prevData) => {
-        const newDetectionSetImages =
-          prevData.detectionSetImages && prevData.detectionSetImages.length > 0
-            ? [...prevData.detectionSetImages, newDetectionSetEntry]
-            : [newDetectionSetEntry];
+  //     setDetectionData((prevData) => {
+  //       const newDetectionSetImages =
+  //         prevData.detectionSetImages && prevData.detectionSetImages.length > 0
+  //           ? [...prevData.detectionSetImages, newDetectionSetEntry]
+  //           : [newDetectionSetEntry];
 
-        localStorage.setItem(
-          "detectionData",
-          JSON.stringify({
-            ...prevData,
-            detectionSetImages: newDetectionSetImages,
-          })
-        );
+  //       localStorage.setItem(
+  //         "detectionData",
+  //         JSON.stringify({
+  //           ...prevData,
+  //           detectionSetImages: newDetectionSetImages,
+  //         })
+  //       );
 
-        return {
-          ...prevData,
-          detectionSetImages: newDetectionSetImages,
-        };
-      });
-    } catch (error) {
-      console.error("Error fetching detection set images:", error);
-    }
-  };
+  //       return {
+  //         ...prevData,
+  //         detectionSetImages: newDetectionSetImages,
+  //       };
+  //     });
+  //   } catch (error) {
+  //     console.error("Error fetching detection set images:", error);
+  //   }
+  // };
 
   const clearUserInfo = () => {
     setUserInfo({});
@@ -149,8 +147,12 @@ export const StateContext = ({ children }) => {
         setDisplayedWaitMessage,
         clearDetectionData,
         fetchDetectionSets,
-        fetchDetectionImages,
+        // setDetectionSet,
+        // detectionSet,
+        // fetchDetectionImages,
         clearUserInfo,
+        detectionStatus,
+        setDetectionStatus
       }}
     >
       {children}

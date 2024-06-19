@@ -3,11 +3,11 @@ import { useStateContext } from "../Context/StateContext";
 
 const DetectionSetNames = () => {
   const {
-    detectionData: { detectionSets },
+    detectionData,
     setShow,
     setSelectedDetectionSetId,
     selectedDetectionSetId,
-    fetchDetectionImages,
+    // fetchDetectionImages,
   } = useStateContext();
 
   const [isOverflowing, setIsOverflowing] = useState(false);
@@ -19,11 +19,12 @@ const DetectionSetNames = () => {
         containerRef.current.scrollHeight > containerRef.current.clientHeight
       );
     }
-  }, [detectionSets]);
+  }, [detectionData]);
 
   const handleClick = (id) => {
+
     setSelectedDetectionSetId(id);
-    fetchDetectionImages(id);
+   
     setShow({
       welcome: false,
       detectionSet: true,
@@ -40,7 +41,7 @@ const DetectionSetNames = () => {
       } text-black w-full h-[75vh] mt-4 overflow-y-scroll`}
     >
       <ul className="flex flex-col gap-2">
-        {detectionSets?.map((set) => (
+        {detectionData?.map((set) => (
           <li
             key={set.id}
             onClick={() => handleClick(set.id)}
