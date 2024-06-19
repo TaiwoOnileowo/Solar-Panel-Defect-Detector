@@ -18,7 +18,7 @@ const DetectionSet = () => {
   );
 
   let displayedDefectSummary = [];
-  let defectClassName;
+
 
   useEffect(() => {
     const selectedSet = detectionData?.find(
@@ -52,7 +52,7 @@ const DetectionSet = () => {
   }
 
   const getColor = (defectClass) => {
-    defectClassName = defectClass;
+  
     switch (defectClass) {
       case "finger":
         return "yellow";
@@ -67,7 +67,7 @@ const DetectionSet = () => {
     }
   };
 
-  if (!selectedSet) {
+  if (!selectedSet.images) {
     console.log(selectedDetectionSetId);
     console.log(detectionData);
     return <div className=" h-full w-full">Detection set not found</div>;
@@ -88,12 +88,12 @@ const DetectionSet = () => {
         className="flex items-center"
       >
         {selectedSet?.images?.map((image, index) => (
-          <SwiperSlide key={index} className="h-[300px]">
+          <SwiperSlide key={index} className="h-[350px]">
             <div className="relative flex flex-col  gap-2 items-center">
               <img
                 src={image.imageUrl}
                 alt={image.originalFilename}
-                className="w-full h-[200px] object-cover rounded-lg"
+                className="w-full h-full object-cover rounded-lg"
               />
               <span className="text-sm">{image.originalFilename}</span>
               <div className="absolute top-0 left-0 w-full h-full  flex items-center justify-center rounded-lg">
@@ -119,17 +119,13 @@ const DetectionSet = () => {
           {selectedSet?.images?.map((image, index) => (
             <SwiperSlide
               key={index}
-              className={`relative flex ${
-                defectClassName === "black_core"
-                  ? "h-[480px] w-full"
-                  : "h-[380px]"
-              }  flex-col gap-2 items-center`}
+              className={`relative flex h-[450px] w-full flex-col gap-2 items-center`}
             >
               <div className="relative">
                 <img
                   src={image.imageUrl}
                   alt={image.originalFilename}
-                  className="w-[400px] h-[300px] object-cover rounded-lg"
+                  className="w-[400px] h-[400px] object-cover rounded-lg"
                 />
                 {imageDimensions[image.id] &&
                   image.defectPredictions.map((defect, defectIndex) => (

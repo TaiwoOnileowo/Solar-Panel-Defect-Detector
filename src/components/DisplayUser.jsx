@@ -43,7 +43,7 @@ const DisplayUser = () => {
   };
 
   return (
-    <div className="relative bg-white w-[38%] h-fit box-shadow rounded-full p-[6px] px-2 flex items-center gap-2">
+    <div className="z-[10] relative bg-white w-[38%] h-fit box-shadow rounded-full p-[6px] px-2 flex items-center gap-2">
       <div className="relative cursor-pointer flex items-center bg-[#f4f7fe] rounded-full justify-center gap-1 ">
         <FaSearch size={12} className="absolute left-[5%] text-gray-700" />
         <input
