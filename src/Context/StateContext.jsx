@@ -9,9 +9,7 @@ export const StateContext = ({ children }) => {
   const [detectionData, setDetectionData] = useState(
     () => JSON.parse(localStorage.getItem("Detection Data")) || []
   );
-  // const [detectionSet, setDetectionSet] = useState(
-  //   () => JSON.parse(localStorage.getItem("Detection Sets")) || []
-  // );
+ 
   const [show, setShow] = useState({
     welcome: true,
     detectionSet: false,
@@ -75,57 +73,7 @@ export const StateContext = ({ children }) => {
     }
   }, [userInfo]);
 
-  // const fetchDetectionImages = async (setId) => {
-  //   if (!setId) return;
-
-  //   const myHeaders = new Headers();
-  //   myHeaders.append("Authorization", `Bearer ${userInfo.accessToken}`);
-
-  //   try {
-  //     const response = await fetch(
-  //       `https://pv-detection-be-f4e629996651.herokuapp.com/api/v1/detection-sets/${setId}/images`,
-  //       {
-  //         method: "GET",
-  //         headers: myHeaders,
-  //       }
-  //     );
-  //     const result = await response.json();
-  //     if (result.status !== "success") {
-  //       throw new Error(
-  //         "Failed to fetch detection set images: " + result.message
-  //       );
-  //     }
-
-  //     const newImages = result.data.images;
-  //     console.log(newImages);
-
-  //     const newDetectionSetEntry = { images: newImages, detectionId: setId };
-
-  //     setDetectionData((prevData) => {
-  //       const newDetectionSetImages =
-  //         prevData.detectionSetImages && prevData.detectionSetImages.length > 0
-  //           ? [...prevData.detectionSetImages, newDetectionSetEntry]
-  //           : [newDetectionSetEntry];
-
-  //       localStorage.setItem(
-  //         "detectionData",
-  //         JSON.stringify({
-  //           ...prevData,
-  //           detectionSetImages: newDetectionSetImages,
-  //         })
-  //       );
-
-  //       return {
-  //         ...prevData,
-  //         detectionSetImages: newDetectionSetImages,
-  //       };
-  //     });
-  //   } catch (error) {
-  //     console.error("Error fetching detection set images:", error);
-  //   }
-  // };
-
-  const clearUserInfo = () => {
+    const clearUserInfo = () => {
     setUserInfo({});
     localStorage.removeItem("userInfo");
   };
@@ -147,9 +95,7 @@ export const StateContext = ({ children }) => {
         setDisplayedWaitMessage,
         clearDetectionData,
         fetchDetectionSets,
-        // setDetectionSet,
-        // detectionSet,
-        // fetchDetectionImages,
+        
         clearUserInfo,
         detectionStatus,
         setDetectionStatus
